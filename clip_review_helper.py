@@ -1,54 +1,72 @@
-#import mutagen
-#import moviepy as mp
-try: import vlc
-except: print(" missing dependency https://pypi.org/project/python-vlc/")
 import tkinter as tk
 import tkinter.filedialog
-
+try: import vlc
+except: print(" missing dependency https://pypi.org/project/python-vlc/")
 
 root = tk.Tk()  # Create the main window
 root.geometry("700x350")
 
 
-class dirbutton(tk.Button):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config(command = self.click_function, \
-            width = "30", height = 2, borderwidth=2, relief="groove",\
-            text="select directory")
-        directory = ""
+class Dirbutton(tk.Frame):
+    def __init__(self, parent, label_text="label_text"):
+        super().__init__(master = parent)
+
+        self.rowconfigure((0,1), weight = 1, uniform='a')
+        self.columnconfigure(0, weight = 1, uniform='a')
+
+        self.label = tk.Label(self, text = label_text, bg="grey")
+        self.label.grid(row = 0, column = 0, sticky = 'nsew')
+        self.button = tk.Button(self, text= "select directory",bg="grey",\
+            command = self.click_function)
+        self.button.grid(row=1, column=0, sticky = 'nsew')
+
+        self.pack(expand = True, fill = tk.X, side=tk.LEFT)
+
+    directory = ""
 
     def click_function(self):
         print("pressed button")
-        path = tk.filedialog.askdirectory(mustexist=True)
-        if path=="":
-            return
-        elif len(path) > 32:
-            self.config(text=f"{path[:9]}...{path[-23:]}")
+        dirpath = tk.filedialog.askdirectory(mustexist=True)
+        if dirpath=="":return
+        self.directory = path
+
+        if len(dirpath) > 32: #long directory check and display format
+            self.button.config(text=f"{dirpath[:9]}...{dirpath[-23:]}")
         else:
-            self.config(text=path)
-
-class dirlabel(tk.label):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config(width = "30", height = 2, borderwidth=2, relief="groove")
-
-testlbl1 = dirlabel(root, text="clips source")
-testlbl1.grid(row=0, column=0, sticky="n")
-testbtn1 = dirbutton(root)
-testbtn1.grid(row=1, column=0, sticky="n")
-
-testlbl2 = dirlabel(root, text="send clips to")
-testlbl2.grid(row=0, column=1, sticky="n")
-testbtn2 = dirbutton(root)
-testbtn2.grid(row=1, column=1, sticky="n")
-
-testlbl3 = dirlabel(root, text="dunno yet")
-testlbl3.grid(row=0, column=2, sticky="n")
-testbtn3 = dirbutton(root)
-testbtn3.grid(row=1, column=2, sticky="n")
+            self.button.config(text=dirpath)
 
 
+class Player_Controls(tk.Frame):
+        def __init__(self, parent):
+            super().__init__(master = parent)
+            
+        def onclick(): #play new media placeholder
+            p.set_media(Instance.media_new("video2.mp4"))
+            p.play()
+            return
+
+class Canvas(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(master = parent)
+
+frame = tk.Frame(root, bg="green", width=50, height=50)
+frame.pack(expand=1, fill=tk.BOTH, side=tk.TOP)
+
+Dirbutton(root, "source")
+Dirbutton(root, "bin 1")
+Dirbutton(root, "bin 2")
+Dirbutton(root, "bin 3")
+
+
+
+Instance=vlc.Instance()
+p=Instance.media_player_new()
+m=Instance.media_new("video.mp4")
+p.set_hwnd(frame.winfo_id()) # yes I know this will not work on some computers, TOO BAD 
+p.set_media(m)
+p.play()
+
+root.mainloop()
 
 
 

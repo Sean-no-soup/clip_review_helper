@@ -1,13 +1,8 @@
-try: import vlc
-except: print(" missing dependency https://pypi.org/project/python-vlc/")
-import time
 
 
 
 
-import tkinter as tk
-root=tk.Tk()
-root.geometry("800x600")
+
 
 def onclick():
     print("clicked")
