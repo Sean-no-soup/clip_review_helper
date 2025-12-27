@@ -7,10 +7,10 @@ except AssertionError: print(" missing dependency https://pypi.org/project/pytho
 
 root = tk.Tk()  # Create the main window
 root.geometry("700x350")
-global source
-source = ""
+
 
 class Dirbutton(tk.Frame):
+
     def __init__(self, parent, label_text="label_text"):
         super().__init__(master = parent)
         self.rowconfigure((0,1), weight = 1, uniform='a')
@@ -25,45 +25,51 @@ class Dirbutton(tk.Frame):
     directory = ""
 
     def click_function(self):
-        dirpath = tk.filedialog.askdirectory(mustexist=True)
+        dirpath = tk.filedialog.askdirectory(mustexist=True).replace("/","\\")+"\\"
         if dirpath=="":return
         self.directory = dirpath
 
         if len(dirpath) > 32: #long directory check and display format
             self.button.config(text=f"{dirpath[:9]}...{dirpath[-23:]}")
+
         else:
             self.button.config(text=dirpath)
+
 
 class Sourcebutton(Dirbutton):
     directory = ""
     fileList = []
+    num_files = 0
     index = 0
 
+    def playnext(self, num=1):
+        self.index = (self.index+num)%(self.num_files)
+        path = f"{self.directory}{self.fileList[self.index]}"
+        player.set_media(Instance.media_new(path))
+        player.pause()
+
+
     def click_function(self): #select directory
-        dirpath = tk.filedialog.askdirectory(mustexist=True)
+        dirpath = tk.filedialog.askdirectory(mustexist=True).replace("/","\\")+"\\"
         if dirpath=="":return
+        color_selected(0) #highlight source
         self.directory = dirpath
-        global source
-        source = dirpath
 
         if len(dirpath) > 32: #long directory check and display format
             self.button.config(text=f"{dirpath[:9]}...{dirpath[-23:]}")
+
         else:
             self.button.config(text=dirpath)
 
         for file in listdir(dirpath):
             if file.endswith(".mp4"):
                 self.fileList.append(file)
-        
-    def gonext():
-        self.index +=1
-        player.set_media(Instance.media_new(fileList[index]))
+                self.num_files += 1
+
+        path = f"{self.directory}{self.fileList[self.index]}"
+        player.set_media(Instance.media_new(path))
         player.play()
-    
-    def golast():
-        self.index -=1
-        player.set_media(Instance.media_new(fileList[index]))
-        player.play()
+
 
 class PlayerControls(tk.Frame):
     def __init__(self, parent):
@@ -82,36 +88,75 @@ class PlayerControls(tk.Frame):
         self.label4.grid(row = 0, column = 4, sticky = 'nsew')
         self.pack(expand = False, fill = tk.X, side=tk.TOP)
 
+
+def color_selected(select_bin=0):
+
+    '''set colors of bins to represent a queued move. 
+    relies on global bin_list. select -1 to show delete'''
+
+    global bin_list
+
+    for _bin in bin_list:
+        _bin.label.configure(bg="grey")
+
+    if select_bin==-1:
+        bin_list[0].label.configure(bg="#ED593B")
+        return
+
+    else:
+        bin_list[select_bin].label.configure(bg="#3B5CED")
+        return
+
+
+#notes/buttons about controls at top
 controls = PlayerControls(root)
 
+#main window
 playerframe = tk.Frame(root, bg="green", width=50, height=50)
 playerframe.pack(expand=1, fill=tk.BOTH, side=tk.TOP)
 Instance=vlc.Instance()
 player=Instance.media_player_new()
 player.set_hwnd(playerframe.winfo_id()) # yes I know this will not work on some computers, TOO BAD 
 
-source = Sourcebutton(root, "source")
+#buttons at bottom
+source_0 = Sourcebutton(root, "source")
 button_1 = Dirbutton(root, "bin 1")
 button_2 = Dirbutton(root, "bin 2")
 button_3 = Dirbutton(root, "bin 3")
 button_4 = Dirbutton(root, "bin 4")
 
+#more setup that could probably be better thought out
+global bin_list
+bin_list = [source_0,button_1,button_2,button_3,button_4]
+
+
+#TODO : store queued changes in bound functions
 #db = dbm.open('queued changes','c') #open database, creating it if necessary
 #db.get('key_name)
 #db['key'] = 'value_string'
 # for key, value in db.items():
 #     print(key, value)zz
 
-root.bind("1", lambda x: print("You pressed 1"))
-root.bind("2", lambda x: print("You pressed 2"))
-root.bind("3", lambda x: print("You pressed 3"))
-root.bind("4", lambda x: print("You pressed 4"))
-root.bind("<space>", lambda x: print("You pressed space"))
-root.bind("<Left>", lambda x: print("You pressed left"))
-root.bind("<Right>", lambda x: print("You pressed right"))
-root.bind("<Up>", lambda x: print("You pressed up"))
-root.bind("<Down>", lambda x: print("You pressed down"))
-root.bind("<Return>", lambda x: print("You pressed enter"))
-root.bind("<Shift-Return>", lambda x: print("You pressed shift+enter"))
+
+#bind queue bins todo
+root.bind('<Escape>', lambda x: color_selected(0))
+root.bind("1", lambda x: color_selected(1))
+root.bind("2", lambda x: color_selected(2))
+root.bind("3", lambda x: color_selected(3))
+root.bind("4", lambda x: color_selected(4))
+
+#bind queue delete
+root.bind("<Down>", lambda x: color_selected(-1))
+
+#bind next, last, play, pause
+root.bind("<space>", lambda x: source_0.playnext(0))
+root.bind("<Left>", lambda x: source_0.playnext(-1))
+root.bind("<Right>", lambda x: source_0.playnext(1))
+
+
+# root.bind("<Up>", lambda x: print("You pressed up"))
+
+# root.bind("<Return>", lambda x: print("You pressed enter"))
+# root.bind("<Shift-Return>", lambda x: print("You pressed shift+enter"))
 
 root.mainloop()
