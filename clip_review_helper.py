@@ -8,8 +8,8 @@ except AssertionError: print(" missing dependency https://pypi.org/project/pytho
 root = tk.Tk()  # Create the main window
 root.geometry("700x350")
 
-
 class Dirbutton(tk.Frame):
+    directory = ""
 
     def __init__(self, parent, label_text="label_text"):
         super().__init__(master = parent)
@@ -22,8 +22,7 @@ class Dirbutton(tk.Frame):
         self.button.grid(row=1, column=0, sticky = 'nsew')
         self.pack(expand = True, fill = tk.X, side=tk.LEFT)
 
-    directory = ""
-
+ 
     def click_function(self):
         dirpath = tk.filedialog.askdirectory(mustexist=True).replace("/","\\")+"\\"
         if dirpath=="":return
@@ -35,18 +34,20 @@ class Dirbutton(tk.Frame):
         else:
             self.button.config(text=dirpath)
 
-
 class Sourcebutton(Dirbutton):
     directory = ""
     fileList = []
     num_files = 0
     index = 0
 
-    def playnext(self, num=1):
-        self.index = (self.index+num)%(self.num_files)
-        path = f"{self.directory}{self.fileList[self.index]}"
-        player.set_media(Instance.media_new(path))
-        player.pause()
+    def playnext(self, num=1, force_play:bool=False):
+        if num==0 and not force_play:
+            player.pause()
+        else:
+            self.index = (self.index+num)%(self.num_files)
+            path = f"{self.directory}{self.fileList[self.index]}"
+            player.set_media(Instance.media_new(path))
+            player.play()
 
 
     def click_function(self): #select directory
@@ -65,12 +66,11 @@ class Sourcebutton(Dirbutton):
             if file.endswith(".mp4"):
                 self.fileList.append(file)
                 self.num_files += 1
-
-        path = f"{self.directory}{self.fileList[self.index]}"
-        player.set_media(Instance.media_new(path))
-        player.play()
+        
+        self.playnext(force_play=True)
 
 
+'''
 class PlayerControls(tk.Frame):
     def __init__(self, parent):
         super().__init__(master = parent)
@@ -87,7 +87,7 @@ class PlayerControls(tk.Frame):
         self.label4 = tk.Label(self, text = 'up/down: note/kill', bg="grey")
         self.label4.grid(row = 0, column = 4, sticky = 'nsew')
         self.pack(expand = False, fill = tk.X, side=tk.TOP)
-
+'''
 
 def color_selected(select_bin=0):
 
@@ -107,9 +107,8 @@ def color_selected(select_bin=0):
         bin_list[select_bin].label.configure(bg="#3B5CED")
         return
 
-
 #notes/buttons about controls at top
-controls = PlayerControls(root)
+#controls = PlayerControls(root)
 
 #main window
 playerframe = tk.Frame(root, bg="green", width=50, height=50)

@@ -14,12 +14,7 @@ class Sourcebutton(tk.Frame):
 
     def __init__(self, parent, label_text="label_text"):
         super().__init__(master = parent)
-        self.rowconfigure((0,1), weight = 1, uniform='a')
-        self.columnconfigure(0, weight = 1, uniform='a')
-        self.label = tk.Label(self, text = label_text, bg="grey")
-        self.label.grid(row = 0, column = 0, sticky = 'nsew')
-        self.button = tk.Button(self, text= "select directory",bg="grey",\
-            command = self.click_function)
+        self.button = tk.Button(self, text= "select directory",command = self.click_function)
         self.button.grid(row=1, column=0, sticky = 'nsew')
         self.pack(expand = True, fill = tk.X, side=tk.LEFT)
 
@@ -27,14 +22,18 @@ class Sourcebutton(tk.Frame):
         self.index = (self.index+num)%(self.num_files)
         path = f"{self.directory}{self.fileList[self.index]}"
         player.set_media(Instance.media_new(path))
-        #player.pause()
-        player.play()
+        player.pause()
+        print(player.is_playing())
+        
+        if num==-1:player.play()
+        if num==1:player.pause()
+
+        
 
     def click_function(self): #select directory
         dirpath = tk.filedialog.askdirectory(mustexist=True).replace("/","\\")+"\\" #vlc was failing to open files with '/'
         if dirpath=="":return
         self.directory = dirpath
-        self.button.config(text=dirpath)
 
         for file in listdir(dirpath):
             if file.endswith(".mp4"):
@@ -52,11 +51,9 @@ Instance=vlc.Instance()
 player=Instance.media_player_new()
 player.set_hwnd(playerframe.winfo_id()) # yes I know this will not work on some computers, not my priority rn
 
-#buttons at bottom
+
 source_0 = Sourcebutton(root, "source")
 
-#bind next, last, play, pause
-root.bind("<space>", lambda x: source_0.playnext(0))
 root.bind("<Left>", lambda x: source_0.playnext(-1))
 root.bind("<Right>", lambda x: source_0.playnext(1))
 
