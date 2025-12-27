@@ -68,7 +68,7 @@ class Dirbutton(tk.Frame):
 
     def click_function(self):
         dirpath = tk.filedialog.askdirectory(mustexist=True).replace("/","\\")+"\\"
-        if dirpath=="":return
+        if dirpath=="" or dirpath=="\\":return
         self.directory = dirpath
 
         if len(dirpath) > 32: #long directory check and display format
@@ -85,12 +85,15 @@ class Sourcebutton(Dirbutton):
 
     def playnext(self, num=1, force_play:bool=False):
         if num==0 and not force_play: #pause/resume
-            player.pause()
+            player_main.pause()
+            player_second.pause()
         else: #start playing a file, update feedback from db
             self.index = (self.index+num)%(self.num_files)
             path = f"{self.directory}{self.fileList[self.index]}"
-            player.set_media(Instance.media_new(path))
-            player.play()
+            player_main.set_media(Instance_0.media_new(path))
+            player_second.set_media(Instance_0.media_new(path))
+            player_main.play()
+            player_second.play()
             myheader.update()
 
     def click_function(self): #select directory
@@ -182,9 +185,12 @@ myheader = Header(root)
 #main window
 playerframe = tk.Frame(root, bg="green", width=50, height=50)
 playerframe.pack(expand=1, fill=tk.BOTH, side=tk.TOP)
-Instance=vlc.Instance() #"--sout-all","--sout #display %1%")
-player=Instance.media_player_new()
-player.set_hwnd(playerframe.winfo_id()) # yes I know this will not work on some computers, TOO BAD 
+Instance_0=vlc.Instance()
+Instance_1=vlc.Instance("--audio-track 1 --no-video")
+player_main=Instance_0.media_player_new()
+player_second=Instance_1.media_player_new() #plays second audio track
+player_main.set_hwnd(playerframe.winfo_id()) # yes I know this will not work on some computers, TOO BAD 
+player_second.set_hwnd(playerframe.winfo_id())
 
 #buttons at bottom
 source_0 = Sourcebutton(root, "source")
