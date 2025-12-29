@@ -1,3 +1,4 @@
 examples_tkvlc.py
 *.mp4
 cache
+/.vscode
